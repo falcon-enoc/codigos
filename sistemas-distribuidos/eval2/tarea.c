@@ -1,35 +1,44 @@
-//Tarea 1
+//Evaluacion 2
 //Jonathan Avila, Enoc Falcon
-#include <stdio.h>
-#include <omp.h>
+//Creacion de Clusters
 
-#define N 1000
+#include <stdio.h>
+#include <stdlib.h>
+
 #define T 8
 
-int main(){
-	int arreglo[N];
-	int constante = 12;
-	//llenado del array
-	for (int i=0; i<N;i++){
-		arreglo[i]=i+1;
-	//	printf("%d, ", arreglo[i]);	
-	}
-	printf("Arreglo creado con %d elementos\n",N );
-	omp_set_num_threads(T);
-	#pragma omp parallel
-	{
-		int tid = omp_get_thread_num();
-		int nprocs = omp_get_num_threads();
+int main() {
+    FILE *archivo;
+    char linea[100];
+    int numero_puntos;
+    int tamano_cluster;
 
-		for(int i=tid;i<N;i+=nprocs){
-			arreglo[i] *= constante;
-		}
-	}	
-	#pragma omp barrier
-	printf("Programa finalizado con exito\n");
-	/*
-	for(int i=0; i<N; i++){
-		printf("%d, ", arreglo[i]);
-	}
-	*/
+    archivo = fopen("test.txt", "r");
+
+    if (archivo == NULL) {
+        printf("No se pudo abrir el archivo.\n");
+        return 1;
+    }
+
+    // Leer las dos primeras líneas del archivo
+    for (int i = 0; i < 2; i++) {
+        if (fgets(linea, sizeof(linea), archivo) != NULL) {
+            if (i == 0) {
+                numero_puntos = atoi(linea);
+                printf("Número de puntos: %d\n", numero_puntos);
+            } else if (i == 1) {
+                tamano_cluster = atoi(linea);
+                printf("Tamaño del cluster: %d\n", tamano_cluster);
+            }
+        }
+    }
+
+    // Leer y mostrar el resto del archivo
+    printf("Resto del archivo:\n");
+    while (fgets(linea, sizeof(linea), archivo) != NULL) {
+        printf("%s", linea); // Imprimir o almacenar según tus necesidades
+    }
+
+    fclose(archivo);
+    return 0;
 }
