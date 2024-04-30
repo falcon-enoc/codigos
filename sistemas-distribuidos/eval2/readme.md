@@ -1,8 +1,8 @@
 # Todo
-[] Lectura del archivo
-[] Parsear el archivo
-[] Medir las distancias
-[] Paralelizar
+[ ] Lectura del archivo
+[ ] Parsear el archivo
+[ ] Medir las distancias
+[ ] Paralelizar
 
 ---
 
