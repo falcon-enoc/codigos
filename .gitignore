@@ -1,1 +1,15 @@
 *.out
+*.exe
+*.dll
+*.so
+*.dylib
+
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+*.idb
+*.ilk
+*.d
+*.map
