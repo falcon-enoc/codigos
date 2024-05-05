@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <math.h>
 #define DIM 20
 
 void imprimir_vectores(double** vectores, int num_vectores, int k);
-
+double distancia_euclidiana(double *v1, double *v2);
 int main() {
     int num_vectores, k;
     double vector[DIM];
@@ -21,7 +21,8 @@ int main() {
             scanf("%lf", &vectores[i][j]);
         }
     }
-    imprimir_vectores(vectores, num_vectores, k);
+    //imprimir_vectores(vectores, num_vectores, k);
+    printf("distancia: %.5f hola",distancia_euclidiana(vectores[0], vectores[1]));
     // Liberar memoria
     for (int i = 0; i < num_vectores; i++) {
         free(vectores[i]);
@@ -29,6 +30,13 @@ int main() {
     free(vectores);
 
     return 0;
+}
+double distancia_euclidiana(double *v1, double *v2) {
+    double dist = 0.0;
+    for (int i = 0; i < DIM; i++) {
+        dist += (v1[i] - v2[i]) * (v1[i] - v2[i]);
+    }
+    return sqrt(dist);
 }
 
 void imprimir_vectores(double** vectores, int num_vectores, int k) {
