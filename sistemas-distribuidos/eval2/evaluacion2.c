@@ -1,3 +1,9 @@
+/*
+Trabajo unidad 2: Listas de clusters
+Integrantes:
+Jonathan Ávila
+Enoc Falcón
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -24,9 +30,9 @@ void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores
 int main() {
 
     int num_vectores, K;
-    scanf("%d %d", &num_vectores, &K); // extraemos las 2 primeras lineas del archivo
+    scanf("%d %d", &num_vectores, &K); // Extraemos las 2 primeras lineas del archivo
     double **db = malloc(num_vectores * sizeof(double *));
-    // extraemos todos los vectores y los alcenamos en db
+    // Extraemos todos los vectores y los alcenamos en db
     for (int i = 0; i < num_vectores; i++) {
         db[i] = malloc(DIM * sizeof(double));
         for (int j = 0; j < DIM; j++) {
@@ -34,13 +40,14 @@ int main() {
         }
     }
     
-    // inicializar cluster
+    // Inicializar cluster
     Cluster cluster;
     inicializar_cluster(&cluster, num_vectores, K);
     
     // Formación de Clusters
     formar_primer_cluster(&cluster, db, num_vectores, K);
     formar_otros_clusters(&cluster, db, num_vectores, K);
+    // Funcion para imprimir la información del cluster
     imprimir_clusters(&cluster, db, K);
     
     // liberar memoria de la db
