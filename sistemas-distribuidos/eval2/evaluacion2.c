@@ -40,6 +40,7 @@ int main() {
         for (int j = 0; j < DIM; j++) {
             scanf("%lf", &db[i][j]);
         }
+
     }
     
     // Inicializar cluster
@@ -94,24 +95,23 @@ void inicializar_cluster(Cluster *cluster, int num_vectores, int K) {
 }
 
 void liberar_cluster(Cluster *cluster) {
-    // Liberar cada uno de los centros
+    // Esta funcion se encarga de liberar la memoria asignada a cada parte de la estructura cluster
     for (int i = 0; i < cluster->num_clusters; i++) {
         free(cluster->centros[i]);
-        // Liberar los índices de miembros de cada clúster
         free(cluster->member_indices[i]);
     }
-    // Ahora liberar los arrays de punteros
+
     free(cluster->centros);
     free(cluster->radios);
     free(cluster->member_indices);
 
-    // Finalmente, resetear los punteros a NULL para evitar el uso de memoria desreferenciada
     cluster->centros = NULL;
     cluster->radios = NULL;
     cluster->member_indices = NULL;
 }
 
 double distancia_euclidiana(double *v1, double *v2) {
+    // Calcula la distancia ecludiana entre 2 vectores de dimension igual a DIM (20)
     double dist = 0.0;
     for (int i = 0; i < DIM; i++) {
         dist += (v1[i] - v2[i]) * (v1[i] - v2[i]);
@@ -120,17 +120,21 @@ double distancia_euclidiana(double *v1, double *v2) {
 }
 
 void imprimir_clusters(const Cluster *cluster, double **vectores, int K) {
+    // Imprime deacuerdo a lo solicitado
+    printf("------------\n");
     for (int i = 0; i < cluster->num_clusters; i++) {
-        printf("Clúster N°: %d\n", i + 1);
-        printf("Centro del clúster:\n[");
+        //printf("Clúster N°: %d\n", i + 1);
+        //printf("Centro del clúster:\n[");
+        printf("[");
         for (int j = 0; j < DIM; j++) {
-            printf("%.6lf", cluster->centros[i][j]);  // Usar seis decimales para la precisión
+            printf("%.4lf", cluster->centros[i][j]);
             if (j < DIM - 1) printf(", ");
         }
         printf("]\n");
-        printf("Radio del clúster: %lf\n", cluster->radios[i]);
+        //printf("Radio del clúster: %lf\n", cluster->radios[i]);
+        printf("%lf\n", cluster->radios[i]);
 
-        printf("Elementos del Clúster:\n");
+        //printf("Elementos del Clúster:\n");
         for (int k = 0; k < K; k++) {  // Asumiendo que siempre hay al menos K miembros en cada clúster
             int idx = cluster->member_indices[i][k];  // Obtener el índice del vector
             printf("[");
@@ -140,23 +144,27 @@ void imprimir_clusters(const Cluster *cluster, double **vectores, int K) {
             }
             printf("]\n");
         }
-        printf("\n");
+        printf("------------\n");
     }
 }
 
 void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados) {
-    // Copiar el primer vector en el centro del primer clúster (asumiendo que la memoria ya está asignada)
+    // Establecer el primer vector del conjunto de datos como el centro del primer cluster
     for (int i = 0; i < DIM; i++) {
         cluster->centros[0][i] = vectores[0][i];
     }
 
+    // Array para almacenar las distancias de todos los vectores al centro del primer cluster
     double *distancias = malloc(num_vectores * sizeof(double));
+    // Configurar el número de hilos para la paralelización con OpenMP
     omp_set_num_threads(N_THREADS);
+    // Calcular paralelamente las distancias Euclidianas desde el centro del primer cluster
     #pragma omp parallel for
     for (int i = 0; i < num_vectores; i++) {
         distancias[i] = distancia_euclidiana(cluster->centros[0], vectores[i]);
     }
 
+    // Elegir los K vectores más cercanos al centro que aún no están asignados a ningún cluster
     for (int i = 0; i < K; i++) {
         double min_dist = DBL_MAX;
         int min_index = -1;
@@ -166,13 +174,15 @@ void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores
                 min_index = j;
             }
         }
-        if (min_index != -1) {  // Verificar si encontramos un vector no asignado
+        // Verificar si se encontró un vector adecuado para ser asignado al cluster
+        if (min_index != -1) {
             cluster->member_indices[0][i] = min_index;
-            asignados[min_index] = true;  // Marcar como asignado
-            distancias[min_index] = DBL_MAX;  // Esto es opcional ya que el vector ya está marcado como asignado
+            asignados[min_index] = true;  // Marcar el vector como asignado
+            distancias[min_index] = DBL_MAX;  // Evitar que se vuelva a seleccionar
         }
     }
 
+    // Calcular el radio del cluster como la máxima distancia entre el centro y los miembros del cluster
     cluster->radios[0] = 0;
     for (int i = 0; i < K; i++) {
         int idx = cluster->member_indices[0][i];
@@ -182,12 +192,14 @@ void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores
         }
     }
 
+    // Liberar el array de distancias después de su uso
     free(distancias);
 }
 
 void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados) {
+    // Formar los clusters subsiguientes
     for (int c = 1; c < cluster->num_clusters; c++) {
-        // Inicializar el centro del nuevo clúster
+        // Buscar el vector más alejado del último centro de cluster formado y usarlo como nuevo centro
         double max_dist = 0;
         int max_index = 0;
         for (int i = 0; i < num_vectores; i++) {
@@ -197,10 +209,12 @@ void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores
                 max_index = i;
             }
         }
+        // Establecer el vector más distante como el centro del nuevo cluster
         for (int i = 0; i < DIM; i++) {
             cluster->centros[c][i] = vectores[max_index][i];
         }
 
+        // Calcular las distancias de todos los vectores al nuevo centro del cluster
         double *distancias = malloc(num_vectores * sizeof(double));
         omp_set_num_threads(N_THREADS);
         #pragma omp parallel for
@@ -208,22 +222,24 @@ void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores
             distancias[i] = distancia_euclidiana(cluster->centros[c], vectores[i]);
         }
 
-    for (int i = 0; i < K; i++) {
-        double min_dist = DBL_MAX;
-        int min_index = -1;
-        for (int j = 0; j < num_vectores; j++) {
-            if (!asignados[j] && distancias[j] < min_dist) {
-                min_dist = distancias[j];
-                min_index = j;
+        // Seleccionar los K vectores más cercanos al nuevo centro que no estén asignados
+        for (int i = 0; i < K; i++) {
+            double min_dist = DBL_MAX;
+            int min_index = -1;
+            for (int j = 0; j < num_vectores; j++) {
+                if (!asignados[j] && distancias[j] < min_dist) {
+                    min_dist = distancias[j];
+                    min_index = j;
+                }
+            }
+            if (min_index != -1) {
+                cluster->member_indices[c][i] = min_index;
+                asignados[min_index] = true;  // Marcar el vector como asignado
+                distancias[min_index] = DBL_MAX;  // Evitar su reselección
             }
         }
-        if (min_index != -1) {
-            cluster->member_indices[c][i] = min_index;
-            asignados[min_index] = true;
-            distancias[min_index] = DBL_MAX;
-        }
-    }
 
+        // Determinar el radio del nuevo cluster
         cluster->radios[c] = 0;
         for (int i = 0; i < K; i++) {
             int idx = cluster->member_indices[c][i];
@@ -233,6 +249,7 @@ void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores
             }
         }
 
+        // Liberar el array de distancias después de su uso
         free(distancias);
     }
 }
