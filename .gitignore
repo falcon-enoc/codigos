@@ -3,7 +3,7 @@
 *.dll
 *.so
 *.dylib
-
+.DS_Store
 *.o
 *.obj
 *.a
