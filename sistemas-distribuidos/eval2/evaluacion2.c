@@ -6,13 +6,15 @@ Enoc Falcón
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <stdbool.h>
 #include <float.h>
+#include <math.h>
 #include <omp.h>
 
 #define DIM 20
 #define N_THREADS 8
 
+// Definicion de la estructura para guardar la informacion solicitada
 typedef struct {
     double **centros;
     double *radios;
@@ -24,14 +26,14 @@ double distancia_euclidiana(double *v1, double *v2);
 void inicializar_cluster(Cluster *cluster, int num_vectores, int K);
 void liberar_cluster(Cluster *cluster);
 void imprimir_clusters(const Cluster *cluster, double **vectores, int K);
-void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores, int K);
-void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores, int K);
+void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados);
+void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados);
 
 int main() {
 
     int num_vectores, K;
     scanf("%d %d", &num_vectores, &K); // Extraemos las 2 primeras lineas del archivo
-    double **db = malloc(num_vectores * sizeof(double *));
+    double **db = malloc(num_vectores * sizeof(double *)); // Reserva de memoria para los vectores
     // Extraemos todos los vectores y los alcenamos en db
     for (int i = 0; i < num_vectores; i++) {
         db[i] = malloc(DIM * sizeof(double));
@@ -44,25 +46,31 @@ int main() {
     Cluster cluster;
     inicializar_cluster(&cluster, num_vectores, K);
     
+    // Lista para marcar los vectores ya usados
+    bool *asignados = calloc(num_vectores, sizeof(bool)); // Inicializa todos los valores en false
+
     // Formación de Clusters
-    formar_primer_cluster(&cluster, db, num_vectores, K);
-    formar_otros_clusters(&cluster, db, num_vectores, K);
+    formar_primer_cluster(&cluster, db, num_vectores, K, asignados);
+    formar_otros_clusters(&cluster, db, num_vectores, K, asignados);
+
     // Funcion para imprimir la información del cluster
     imprimir_clusters(&cluster, db, K);
+    
+    // liberar memoria del cluster y lista asignados
+    free(asignados);
+    liberar_cluster(&cluster);
     
     // liberar memoria de la db
     for (int i = 0; i < num_vectores; i++) {
         free(db[i]);
     }
     free(db);
-    // liberar memoria del cluster
-    liberar_cluster(&cluster);
 
     return 0;
 }
 
 void inicializar_cluster(Cluster *cluster, int num_vectores, int K) {
-    // Calcular el número de clústeres basado en el número de vectores y el tamaño del clúster
+    // Calcular el número de clústeres basado en el número de vectores y el tamaño de cada clúster
     cluster->num_clusters = ceil((double)num_vectores / (K + 1));
 
     // Asignar memoria para los centros, radios e índices de miembros
@@ -77,10 +85,9 @@ void inicializar_cluster(Cluster *cluster, int num_vectores, int K) {
             cluster->centros[i][j] = 0.0;  // Inicializar el centro a cero
         }
 
-        // Inicializar el radio del clúster a 0
+        // Inicializar el radio a 0
         cluster->radios[i] = 0.0;
 
-        // Asignar memoria para los índices de miembros de cada clúster
         // Aquí asumimos que cada clúster puede tener hasta K miembros
         cluster->member_indices[i] = malloc(K * sizeof(int));
     }
@@ -137,7 +144,7 @@ void imprimir_clusters(const Cluster *cluster, double **vectores, int K) {
     }
 }
 
-void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores, int K) {
+void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados) {
     // Copiar el primer vector en el centro del primer clúster (asumiendo que la memoria ya está asignada)
     for (int i = 0; i < DIM; i++) {
         cluster->centros[0][i] = vectores[0][i];
@@ -154,13 +161,16 @@ void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores
         double min_dist = DBL_MAX;
         int min_index = -1;
         for (int j = 0; j < num_vectores; j++) {
-            if (distancias[j] < min_dist) {
+            if (!asignados[j] && distancias[j] < min_dist) {
                 min_dist = distancias[j];
                 min_index = j;
             }
         }
-        cluster->member_indices[0][i] = min_index;
-        distancias[min_index] = DBL_MAX;
+        if (min_index != -1) {  // Verificar si encontramos un vector no asignado
+            cluster->member_indices[0][i] = min_index;
+            asignados[min_index] = true;  // Marcar como asignado
+            distancias[min_index] = DBL_MAX;  // Esto es opcional ya que el vector ya está marcado como asignado
+        }
     }
 
     cluster->radios[0] = 0;
@@ -175,7 +185,7 @@ void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores
     free(distancias);
 }
 
-void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores, int K) {
+void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados) {
     for (int c = 1; c < cluster->num_clusters; c++) {
         // Inicializar el centro del nuevo clúster
         double max_dist = 0;
@@ -198,18 +208,21 @@ void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores
             distancias[i] = distancia_euclidiana(cluster->centros[c], vectores[i]);
         }
 
-        for (int i = 0; i < K; i++) {
-            double min_dist = DBL_MAX;
-            int min_index = -1;
-            for (int j = 0; j < num_vectores; j++) {
-                if (distancias[j] < min_dist && distancias[j] != DBL_MAX) {
-                    min_dist = distancias[j];
-                    min_index = j;
-                }
+    for (int i = 0; i < K; i++) {
+        double min_dist = DBL_MAX;
+        int min_index = -1;
+        for (int j = 0; j < num_vectores; j++) {
+            if (!asignados[j] && distancias[j] < min_dist) {
+                min_dist = distancias[j];
+                min_index = j;
             }
+        }
+        if (min_index != -1) {
             cluster->member_indices[c][i] = min_index;
+            asignados[min_index] = true;
             distancias[min_index] = DBL_MAX;
         }
+    }
 
         cluster->radios[c] = 0;
         for (int i = 0; i < K; i++) {
