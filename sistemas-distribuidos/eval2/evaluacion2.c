@@ -57,11 +57,11 @@ int main() {
     // Funcion para imprimir la información del cluster
     imprimir_clusters(&cluster, db, K);
     
-    // liberar memoria del cluster y lista asignados
+    // Liberar memoria del cluster y lista asignados
     free(asignados);
     liberar_cluster(&cluster);
     
-    // liberar memoria de la db
+    // Liberar memoria de la db
     for (int i = 0; i < num_vectores; i++) {
         free(db[i]);
     }
@@ -197,22 +197,27 @@ void formar_primer_cluster(Cluster *cluster, double **vectores, int num_vectores
 }
 
 void formar_otros_clusters(Cluster *cluster, double **vectores, int num_vectores, int K, bool *asignados) {
+    bool *centros_asignados = malloc(num_vectores * sizeof(bool));
     // Formar los clusters subsiguientes
     for (int c = 1; c < cluster->num_clusters; c++) {
         // Buscar el vector más alejado del último centro de cluster formado y usarlo como nuevo centro
         double max_dist = 0;
         int max_index = 0;
         for (int i = 0; i < num_vectores; i++) {
-            double dist = distancia_euclidiana(cluster->centros[c-1], vectores[i]);
-            if (dist > max_dist) {
-                max_dist = dist;
-                max_index = i;
+            if (!centros_asignados[i]){
+                double dist = distancia_euclidiana(cluster->centros[c-1], vectores[i]);
+                if (dist > max_dist) {
+                    max_dist = dist;
+                    max_index = i;
+                }
             }
         }
         // Establecer el vector más distante como el centro del nuevo cluster
         for (int i = 0; i < DIM; i++) {
             cluster->centros[c][i] = vectores[max_index][i];
         }
+
+        centros_asignados[max_index] = true;
 
         // Calcular las distancias de todos los vectores al nuevo centro del cluster
         double *distancias = malloc(num_vectores * sizeof(double));
