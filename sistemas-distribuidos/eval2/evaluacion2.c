@@ -123,16 +123,16 @@ void imprimir_clusters(const Cluster *cluster, double **vectores, int K) {
     // Imprime deacuerdo a lo solicitado
     printf("------------\n");
     for (int i = 0; i < cluster->num_clusters; i++) {
-        //printf("Clúster N°: %d\n", i + 1);
-        //printf("Centro del clúster:\n[");
-        printf("[");
+        printf("Clúster N°: %d\n", i + 1);
+        printf("Centro del clúster:\n[");
+        //printf("[");
         for (int j = 0; j < DIM; j++) {
             printf("%.4lf", cluster->centros[i][j]);
             if (j < DIM - 1) printf(", ");
         }
         printf("]\n");
-        //printf("Radio del clúster: %lf\n", cluster->radios[i]);
-        printf("%lf\n", cluster->radios[i]);
+        printf("Radio del clúster: %lf\n", cluster->radios[i]);
+        //printf("%lf\n", cluster->radios[i]);
 
         //printf("Elementos del Clúster:\n");
         for (int k = 0; k < K; k++) {  // Asumiendo que siempre hay al menos K miembros en cada clúster
