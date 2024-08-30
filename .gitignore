@@ -14,3 +14,4 @@
 *.d
 *.map
 sistemas-distribuidos/.DS_Store
+venv/
