@@ -1,7 +1,19 @@
+<<<<<<< Updated upstream
 ### Nota
 Este código fue creado para la asignatura de Sistemas Distribuidos.
 fecha de entrega: 07-05-2024
 Integrantes: Jonathan Ávila, Enoc Falcón
+=======
+# Todo
+[x] Lectura del archivo
+[x] Parsear el archivo
+[-] Medir las distancias
+[] Paralelizar
+[] Permitir Archivos desde la consola
+
+---
+
+>>>>>>> Stashed changes
 # Implementación de Lista de Clusters (LC) con OpenMP
 
 Este proyecto desarrolla un índice llamado Lista de Clusters (LC) para indexar elementos multimedia y procesar consultas de manera eficiente. El índice agrupa elementos en clusters utilizando una arquitectura multinúcleo con programación multihilo mediante OpenMP.
