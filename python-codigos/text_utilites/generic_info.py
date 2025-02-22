@@ -1,3 +1,14 @@
+# Este script proporciona información básica sobre un archivo de texto, como el número de líneas,
+# el número de palabras y el número de caracteres del archivo. Además, permite al usuario especificar
+# opcionalmente un rango de líneas para imprimir del archivo. El rango puede ser especificado en varios
+# formatos como "inicio:fin", ":fin" o "inicio:", donde se imprimen las líneas comprendidas en ese rango.
+# Si no se especifica ningún rango, solo se imprime la información básica del archivo.
+
+# Funcionalidades principales:
+# - Leer un archivo de texto y calcular el número de líneas, palabras y caracteres.
+# - Imprimir un rango de líneas especificado por el usuario, en caso de que se indique.
+# - Manejar errores como archivos no encontrados y rango de líneas inválidos.
+
 import argparse
 
 def informacion_basica_txt(file_path, line_range=None):
