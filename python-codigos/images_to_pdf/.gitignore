@@ -1,0 +1,31 @@
+
+# Ignorar todos los archivos por defecto
+*
+
+# Permitir archivos específicos
+!images_to_pdf.py
+!README.md
+!.gitignore
+
+# Ignorar carpetas con imágenes y PDFs
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.pdf
+
+# Ignorar archivos de Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorar entornos virtuales
+venv/
+env/
+.env/
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
