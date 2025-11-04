@@ -1,0 +1,26 @@
+# Compresor de Imágenes - Dependencias
+# Instalar con: pip install -r requirements.txt
+
+# Biblioteca principal para procesamiento de imágenes
+Pillow>=10.0.0
+
+# Soporte para formatos HEIC/HEIF (fotos de iPhone)
+pillow-heif>=0.13.0
+
+# Dependencias opcionales para mejor rendimiento
+# Descomenta las siguientes líneas si necesitas funcionalidades adicionales:
+
+# Para mejor rendimiento en operaciones de imagen
+# numpy>=1.24.0
+
+# Para procesamiento avanzado de imágenes
+# opencv-python>=4.8.0
+
+# Para manejo de metadatos EXIF más avanzado
+# ExifRead>=3.0.0
+
+# Para soporte de más formatos de imagen
+# imageio>=2.31.0
+
+# Para compresión WebP optimizada
+# webp>=0.1.6
